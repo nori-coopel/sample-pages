@@ -70,35 +70,55 @@
 
     .file-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
+    /* ---- サムネイル：縦画像をそのまま表示 ---- */
     .thumb-wrap {
       width: 100%;
-      overflow: hidden;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       margin-bottom: 8px;
-      min-height: 160px;
     }
 
-    .file-card .thumb {
+    .thumb-wrap .thumb {
       width: 100%;
       height: auto;
-      object-fit: contain;
+      display: block;
       border-radius: 4px;
       cursor: pointer;
-      transition: transform 0.3s;
     }
 
-    .file-card.rotated .thumb {
-      width: auto;
-      height: 240px;
-      transform: rotate(90deg);
+    /*
+     * 山田太郎: 画像データは縦(676×1108)だがカード内容が90°CW傾いている。
+     * -90deg で正立した横表示にする。
+     * ラッパーを横向きアスペクト比(1108:676)にし、
+     * 画像を width: 61% (=676/1108) に設定して絶対配置で回転させる。
+     */
+    .thumb-wrap.landscape {
+      aspect-ratio: 1108 / 676;
+      position: relative;
+      overflow: hidden;
     }
 
-    .file-card .icon {
-      font-size: 56px;
-      margin-bottom: 8px;
-      line-height: 1;
+    .thumb-wrap.landscape .thumb {
+      position: absolute;
+      width: calc(100% * 676 / 1108); /* ≈61% — 回転後に横幅がラッパー幅に一致 */
+      height: auto;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-90deg);
+    }
+
+    /* 山田花子: 90deg CW で正立・横表示 */
+    .thumb-wrap.landscape-cw {
+      aspect-ratio: 1110 / 662;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .thumb-wrap.landscape-cw .thumb {
+      position: absolute;
+      width: calc(100% * 662 / 1110);
+      height: auto;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%) rotate(-90deg);
     }
 
     .file-card .name {
@@ -166,12 +186,17 @@
     }
 
     .file-list .thumb-small {
-      width: 36px;
-      height: 36px;
-      object-fit: cover;
+      width: 60px;
+      height: 40px;
+      object-fit: contain;
       border-radius: 3px;
       cursor: pointer;
+      background: #f0f0f0;
     }
+
+    /* リストのサムネイル回転 */
+    .thumb-small.rot-n90 { transform: rotate(-90deg); }
+    .thumb-small.rot-180 { transform: rotate(180deg); }
 
     /* ビュー切り替え */
     body.list-mode .file-grid { display: none; }
@@ -182,7 +207,7 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.7);
+      background: rgba(0,0,0,0.75);
       z-index: 100;
       align-items: center;
       justify-content: center;
@@ -199,6 +224,10 @@
       border-radius: 6px;
       box-shadow: 0 8px 32px rgba(0,0,0,0.5);
     }
+
+    /* モーダル内でも回転を適用 */
+    .modal img.rot-n90 { transform: rotate(-90deg); max-width: 92vh; max-height: 92vw; }
+    .modal img.rot-90  { transform: rotate(-90deg); max-width: 92vh; max-height: 92vw; }
 
     .modal-close {
       position: fixed;
@@ -255,23 +284,24 @@
 
 <script>
   const files = [
-    { name: "山田太郎.png", type: "PNG 画像", size: "677 KB", date: "2026/06/09", path: "山田太郎.png" },
-    { name: "山田花子.png", type: "PNG 画像", size: "725 KB", date: "2026/06/09", path: "山田花子.png" },
+    // rotate: 'landscape' = -90deg補正で横表示, 'flip180' = 180deg補正で縦表示
+    { name: "山田太郎.png", type: "PNG 画像", size: "677 KB", date: "2026/06/09", path: "山田太郎.png", rotate: "landscape", rotClass: "rot-n90" },
+    { name: "山田花子.png", type: "PNG 画像", size: "725 KB", date: "2026/06/09", path: "山田花子.png", rotate: "landscape-cw", rotClass: "rot-90" },
   ];
 
   document.getElementById("file-count").textContent = `${files.length} 件のファイル`;
 
-  const grid = document.getElementById("grid-view");
+  const grid     = document.getElementById("grid-view");
   const listBody = document.getElementById("list-body");
 
-  files.forEach((f, i) => {
-    // グリッドカード（偶数インデックスは横、奇数は縦に回転）
-    const rotated = i % 2 === 1;
+  files.forEach(f => {
+    // グリッドカード
     const card = document.createElement("div");
-    card.className = "file-card" + (rotated ? " rotated" : "");
+    card.className = "file-card";
     card.innerHTML = `
-      <div class="thumb-wrap">
-        <img class="thumb" src="${f.path}" alt="${f.name}" onclick="openModal('${f.path}')" title="クリックでプレビュー">
+      <div class="thumb-wrap ${f.rotate}">
+        <img class="thumb" src="${f.path}" alt="${f.name}"
+             onclick="openModal('${f.path}','${f.rotClass}')" title="クリックでプレビュー">
       </div>
       <div class="name">${f.name}</div>
       <div class="meta">${f.size} &nbsp;|&nbsp; ${f.date}</div>
@@ -284,7 +314,8 @@
     tr.innerHTML = `
       <td>
         <div class="file-name">
-          <img class="thumb-small" src="${f.path}" alt="${f.name}" onclick="openModal('${f.path}')" title="クリックでプレビュー">
+          <img class="thumb-small ${f.rotClass}" src="${f.path}" alt="${f.name}"
+               onclick="openModal('${f.path}','${f.rotClass}')" title="クリックでプレビュー">
           ${f.name}
         </div>
       </td>
@@ -302,8 +333,10 @@
     document.getElementById("btn-list").classList.toggle("active", mode === "list");
   }
 
-  function openModal(src) {
-    document.getElementById("modal-img").src = src;
+  function openModal(src, rotClass) {
+    const img = document.getElementById("modal-img");
+    img.src = src;
+    img.className = rotClass || "";
     document.getElementById("modal").classList.add("open");
   }
 

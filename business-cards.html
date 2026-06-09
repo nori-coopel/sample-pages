@@ -70,13 +70,29 @@
 
     .file-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
 
+    .thumb-wrap {
+      width: 100%;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 8px;
+      min-height: 160px;
+    }
+
     .file-card .thumb {
       width: 100%;
       height: auto;
       object-fit: contain;
       border-radius: 4px;
-      margin-bottom: 8px;
       cursor: pointer;
+      transition: transform 0.3s;
+    }
+
+    .file-card.rotated .thumb {
+      width: auto;
+      height: 240px;
+      transform: rotate(90deg);
     }
 
     .file-card .icon {
@@ -248,12 +264,15 @@
   const grid = document.getElementById("grid-view");
   const listBody = document.getElementById("list-body");
 
-  files.forEach(f => {
-    // グリッドカード
+  files.forEach((f, i) => {
+    // グリッドカード（偶数インデックスは横、奇数は縦に回転）
+    const rotated = i % 2 === 1;
     const card = document.createElement("div");
-    card.className = "file-card";
+    card.className = "file-card" + (rotated ? " rotated" : "");
     card.innerHTML = `
-      <img class="thumb" src="${f.path}" alt="${f.name}" onclick="openModal('${f.path}')" title="クリックでプレビュー">
+      <div class="thumb-wrap">
+        <img class="thumb" src="${f.path}" alt="${f.name}" onclick="openModal('${f.path}')" title="クリックでプレビュー">
+      </div>
       <div class="name">${f.name}</div>
       <div class="meta">${f.size} &nbsp;|&nbsp; ${f.date}</div>
       <a class="btn-dl" href="${f.path}" download="${f.name}">ダウンロード</a>

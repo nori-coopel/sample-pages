@@ -3,17 +3,22 @@
     <title>Sample HTML</title>
 </head>
 <body>
-    <h1>Welcome to Sample HTML</h1>
     <button id="btn_click">クリック</button>
     <button id="btn_clear">クリア</button>
     <div id="click_result"></div>
-    <div id="register_result"></div>
+    <div id="register_result" style="font-weight: bold; font-size: 1.5em;"></div>
 
     <script>
         document.getElementById('btn_click').addEventListener('click', function () {
             document.getElementById('click_result').textContent = 'クリック成功';
-            var success = Math.random() < 0.5;
-            document.getElementById('register_result').textContent = success ? '登録完了' : '登録失敗';
+            document.getElementById('register_result').textContent = '';
+
+            setTimeout(function () {
+                var success = Math.random() < 0.5;
+                var resultEl = document.getElementById('register_result');
+                resultEl.textContent = success ? '登録完了' : '登録失敗';
+                resultEl.style.color = success ? 'green' : 'red';
+            }, 1000);
         });
 
         document.getElementById('btn_clear').addEventListener('click', function () {

@@ -3,8 +3,19 @@
     <title>Download Sample</title>
 </head>
 <body>
-    <a id="btn_download" href="%E3%82%B5%E3%83%B3%E3%83%97%E3%83%AB.aspx" download="サンプル.aspx">
-        <button type="button">ダウンロード</button>
-    </a>
+    <button id="btn_download" type="button">ダウンロード</button>
+
+    <script>
+        document.getElementById('btn_download').addEventListener('click', function () {
+            var useAspx = Math.random() < 0.7;
+            var fileName = useAspx ? 'サンプル.aspx' : 'サンプル.csv';
+            var link = document.createElement('a');
+            link.href = encodeURIComponent(fileName);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        });
+    </script>
 </body>
 </html>

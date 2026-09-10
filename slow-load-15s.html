@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>15秒ロードテストページ</title>
+<style>
+  :root {
+    color-scheme: light dark;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #0f1115;
+    color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+    text-align: center;
+    padding: 16px;
+  }
+
+  /* --- ローディング画面 --- */
+  #loading {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+  }
+  .spinner {
+    width: 56px;
+    height: 56px;
+    border-radius: 50%;
+    border: 5px solid rgba(255,255,255,0.15);
+    border-top-color: #4f9dff;
+    animation: spin 1s linear infinite;
+  }
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+  #progressWrap {
+    width: min(320px, 80vw);
+    height: 8px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.12);
+    overflow: hidden;
+  }
+  #progressBar {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, #4f9dff, #7cd4ff);
+    transition: width 0.1s linear;
+  }
+  #countdown {
+    font-variant-numeric: tabular-nums;
+    font-size: 1rem;
+    color: #b8c1cf;
+  }
+  #loadingLabel {
+    font-size: 1.05rem;
+    letter-spacing: 0.02em;
+  }
+
+  /* --- 本コンテンツ --- */
+  #content {
+    display: none;
+    max-width: 560px;
+  }
+  #content h1 {
+    font-size: 1.6rem;
+    margin-bottom: 12px;
+  }
+  #content p {
+    color: #b8c1cf;
+    line-height: 1.7;
+    font-size: 0.98rem;
+  }
+  #content .badge {
+    display: inline-block;
+    margin-top: 18px;
+    padding: 6px 14px;
+    border-radius: 999px;
+    background: rgba(79,157,255,0.15);
+    color: #7cd4ff;
+    font-size: 0.85rem;
+  }
+  #ackButton {
+    display: block;
+    margin: 24px auto 0;
+    padding: 10px 32px;
+    border: none;
+    border-radius: 8px;
+    background: #4f9dff;
+    color: #0f1115;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.15s ease, transform 0.1s ease;
+  }
+  #ackButton:hover {
+    background: #7cd4ff;
+  }
+  #ackButton:active {
+    transform: scale(0.97);
+  }
+  #ackButton.acked {
+    background: #3ddc84;
+    color: #0f1115;
+    cursor: default;
+  }
+  #ackNote {
+    margin-top: 12px;
+    font-size: 0.85rem;
+    color: #7cd4ff;
+    min-height: 1.2em;
+  }
+</style>
+</head>
+<body>
+
+  <div id="loading">
+    <div class="spinner" role="status" aria-label="読み込み中"></div>
+    <div id="loadingLabel">ページを読み込んでいます…</div>
+    <div id="progressWrap">
+      <div id="progressBar"></div>
+    </div>
+    <div id="countdown">残り 15.0 秒</div>
+  </div>
+
+  <div id="content">
+    <h1>読み込み完了</h1>
+    <p>
+      このページは意図的に 15 秒間のロード時間をシミュレートしています。<br>
+      ローディングスピナー・進捗バー・カウントダウン表示のテストや、
+      遅いページ読み込み時の UX 確認などにお使いください。
+    </p>
+    <div class="badge">Load time: 15.0s</div>
+    <button id="ackButton" type="button">了解</button>
+    <div id="ackNote"></div>
+  </div>
+
+<script>
+  (function () {
+    var DURATION_MS = 15000;
+    var startTime = performance.now();
+    var progressBar = document.getElementById('progressBar');
+    var countdown = document.getElementById('countdown');
+    var loadingEl = document.getElementById('loading');
+    var contentEl = document.getElementById('content');
+
+    function tick() {
+      var elapsed = performance.now() - startTime;
+      var pct = Math.min(elapsed / DURATION_MS, 1);
+      progressBar.style.width = (pct * 100).toFixed(1) + '%';
+
+      var remaining = Math.max(0, (DURATION_MS - elapsed) / 1000);
+      countdown.textContent = '残り ' + remaining.toFixed(1) + ' 秒';
+
+      if (pct < 1) {
+        requestAnimationFrame(tick);
+      } else {
+        loadingEl.style.display = 'none';
+        contentEl.style.display = 'block';
+      }
+    }
+
+    requestAnimationFrame(tick);
+
+    var ackButton = document.getElementById('ackButton');
+    var ackNote = document.getElementById('ackNote');
+    ackButton.addEventListener('click', function () {
+      ackButton.classList.add('acked');
+      ackButton.textContent = '確認済み';
+      ackButton.disabled = true;
+      ackNote.textContent = 'クリックされました';
+    });
+  })();
+</script>
+
+</body>
+</html>
